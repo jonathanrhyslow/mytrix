@@ -2,6 +2,10 @@ from typing import List
 
 import unittest
 
+from mytrix.exceptions import ComformabilityError
+
+__version__ = "0.1"
+
 class Matrix:
     """A class to represent a general matrix"""
 
@@ -9,8 +13,8 @@ class Matrix:
         # initialise matrix dimensions
         if not (isinstance(m, int) and isinstance(n, int)):
             raise TypeError("dimensions must be integral")
-        if m < 0 or n < 0:
-            raise ValueError("dimensions must be non-negative")
+        if m <= 0 or n <= 0:
+            raise ValueError("dimensions must be positive")
         self.m = m
         self.n = n
 
@@ -25,6 +29,12 @@ class Matrix:
 
     def __str__(self):
         s = '\n'.join([' '.join([str(elem) for elem in row]) for row in self.data])
+        return s + '\n'
+
+    def __repl__(self):
+        s = "Matrix of dimension " + str(m) + " by " + str(n) + '\n'
+        s = s + "with data" + '\n'
+        s = s + '\n'.join([' '.join([str(elem) for elem in row]) for row in self.data])
         return s + '\n'
 
     def __eq__(self, mtrx):
@@ -102,6 +112,11 @@ class MatrixTests(unittest.TestCase):
         m2 = Matrix(2, 2, [5, 6, 7, 8])
         m3 = m1 * m2
         self.assertTrue(m3 == Matrix(2, 2, [19, 22, 43, 50]))
+
+    def testNeg(self):
+        m1 = Matrix(2, 2, [1, 2, 3, 4])
+        m2 = -m1
+        self.assertTrue(m2 == Matrix(2, 2, [-1, -2, -3, -4]))
 
 if __name__ == "__main__":
     unittest.main()

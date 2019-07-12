@@ -1,6 +1,6 @@
-class DimensionError(Exception):
-    """An exception class for dimension errors"""
-    pass
+"""
+Global matrix exceptions and warning classes
+"""
 
 class ComformabilityError(Exception):
     """An exception class for conformability errors"""
