@@ -1,5 +1,4 @@
-from typing import List
-
+import random
 import unittest
 
 from mytrix.exceptions import ComformabilityError
@@ -9,7 +8,7 @@ __version__ = "0.1"
 class Matrix:
     """A class to represent a general matrix"""
 
-    def __init__(self, m: int, n: int, data: List[float] = None) -> None:
+    def __init__(self, m, n, init = True) -> None:
         # initialise matrix dimensions
         if not (isinstance(m, int) and isinstance(n, int)):
             raise TypeError("dimensions must be integral")
@@ -19,13 +18,12 @@ class Matrix:
         self.n = n
 
         # initalise matrix contents
-        self.data = []
-        if data:
-            if len(data) != m * n:
-                raise ValueError("data argument should be of length m x n")
-            self.data = [[data[i * n + j % m] for j in range(n)] for i in range(m)]
+        if not isinstance(init, Bool):
+            raise TypeError("init must be Boolean")
+        if init:
+            self.rows = [[0]*n for _ in range(m)]
         else:
-            self.data = [[0 for j in range(n)] for i in range(n)]
+            self.rows = []
 
     def __str__(self):
         s = '\n'.join([' '.join([str(elem) for elem in row]) for row in self.data])
@@ -92,6 +90,31 @@ class Matrix:
 
     def set_ij(self, i, j, val):
         self.data[i][j] = val
+
+    @classmethod
+    def makeRandom(cls, m, n, min = 0, max = 1):
+        """Make a random matrix of dimension m by n with elements chosen \
+        independently and uniformly from the interval (min, max)"""
+
+        obj = Matrix(m, n, init = False)
+        for _1 in range(m):
+            obj.data.append([random.randrange(min, max) for _2 in range(n)])
+        return obj
+
+    @classmethod
+    def makeZero(cls, m, n):
+        """Make a zero matrix of dimension m by n"""
+
+        return Matrix(m, n, init = True)
+
+    @classmethod
+    def makeIdentity(cls, m):
+        """Make an identity matrix of dimension m by m"""
+
+        obj = Matrix(m, m, init = False)
+        for i in range(m):
+            obj.data.append([1 if i = j else 1 for j in range(m)])
+        return obj
 
 class MatrixTests(unittest.TestCase):
 
