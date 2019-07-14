@@ -39,6 +39,9 @@ class Matrix:
         return self.data == mtrx.data
 
     def __add__(self, mtrx):
+        """Adds a matrix to this matrix and returns the result. Doesn't \
+        modify the current matrix"""
+
         if not (self.m == mtrx.m and self.n == mtrx.n):
             raise ComformabilityError("matrices must have the same dimensions")
         res = Matrix(self.m, self.n)
@@ -49,6 +52,9 @@ class Matrix:
         return res
 
     def __sub__(self, mtrx):
+        """Subtracts a matrix from this matrix and returns the result.\
+        Doesn't modify the current matrix"""
+
         if not (self.m == mtrx.m and self.n == mtrx.n):
             raise ComformabilityError("matrices must have the same dimensions")
         res = Matrix(self.m, self.n)
@@ -59,6 +65,9 @@ class Matrix:
         return res
 
     def __mul__(self, mtrx):
+        """Multiplies this matrix by another matrix (on the right) and \
+        returns the result. Doesn't modify the current matrix"""
+
         if not self.n == mtrx.m:
             raise ComformabilityError("column dimension of first matrix much match row dimension of \
             second matrix")
@@ -84,6 +93,35 @@ class Matrix:
                 val = -self.get_ij(i, j)
                 res.set_ij(i, j, val)
         return res
+
+    def __iadd__(self, mtrx):
+        """Adds a matrix to this matrix, modifying it in the process"""
+
+        # calls __add__
+        tmp = self + mtrx
+        self.data = tmp.data
+        return self
+
+    def __isub__(self, mtrx):
+        """Subtracts a matrix from this matrix, modifying it in the process"""
+
+        # calls __sub__
+        tmp = self - mtrx
+        self.data = tmp.data
+        return self
+
+    def __imul__(self, mtrx):
+        """Multiplies this matrix by another matrix (on the right), \
+        modifying it in the process"""
+
+        # calls __mul__
+        tmp = self * mtrx
+        self.data = tmp.data
+        self.m, self.n = tmp.dim()
+        return self
+
+    def dim(self):
+        return (self.m, self.n)
 
     def get_ij(self, i, j):
         return self.data[i][j]
