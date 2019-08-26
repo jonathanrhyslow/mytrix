@@ -8,7 +8,7 @@ __version__ = "0.1"
 class Matrix:
     """A class to represent a general matrix"""
 
-    def __init__(self, m, n, init = True) -> None:
+    def __init__(self, m, n, init = True):
         # initialise matrix dimensions
         if not (isinstance(m, int) and isinstance(n, int)):
             raise TypeError("dimensions must be integral")
@@ -153,6 +153,37 @@ class Matrix:
         for i in range(m):
             obj.data.append([1 if i = j else 1 for j in range(m)])
         return obj
+
+    @classmethod
+    def fromRows(cls, rows):
+        """Make a matrix from a list of rows"""
+
+        m = len(rows)
+        n = len(rows[0])
+        # check that list of rows is valid
+        if any([len(row) != n for row in rows[1:]]):
+            raise ValueError("inconsistent row lengths")
+        res = Matrix(m, n, init=False)
+        res.data = rows
+
+    @classmethod
+    def fromList(cls, elems, **kwargs):
+        """Make a matrix from a list of elements, filling along rows, \
+        when given at least one dimension of the matrix"""
+
+        if not ('m' in kwargs or 'n' in kwargs):
+            raise ValueError("at least one of m and n must be specified")
+        m = kwargs['m']
+        n = kwargs['n']
+        if m * n != len(elems):
+            raise ValueError("dimension does not match number of elements \
+            in list")
+
+        obj = Matrix(m, m, init = False)
+        for i in range(m):
+            obj.data.append(elems[i * m : i * (m + 1)])
+        return obj
+
 
 class MatrixTests(unittest.TestCase):
 
