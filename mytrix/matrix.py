@@ -1,3 +1,5 @@
+"""Module for general matrix class and related unit tests."""
+
 import random
 import unittest
 
@@ -10,6 +12,7 @@ class Matrix:
     """A class to represent a general matrix."""
 
     def __init__(self, m, n, init=True):
+        """Initalise matrix dimensions and contents."""
         # initialise matrix dimensions
         if not (isinstance(m, int) and isinstance(n, int)):
             raise TypeError("dimensions must be integral")
@@ -27,18 +30,22 @@ class Matrix:
             self.rows = []
 
     def __str__(self):
+        """Generate text representation of matrix."""
         s = '\n'.join([' '.join([str(elem) for elem in row])
                       for row in self.data])
         return s + '\n'
 
     def __repl__(self):
-        s = "Matrix of dimension " + str(m) + " by " + str(n) + '\n'
+        """Generate reproducible representation of matrix."""
+        s = "Matrix of dimension " + str(self.m) + " by " \
+            + str(self.n) + '\n'
         s = s + "with data" + '\n'
         s = s + '\n'.join([' '.join([str(elem) for elem in row])
                           for row in self.data])
         return s + '\n'
 
     def __eq__(self, mtrx):
+        """Evaluate whether two matrices are equivalent."""
         return self.data == mtrx.data
 
     def __add__(self, mtrx):
@@ -70,10 +77,11 @@ class Matrix:
         return res
 
     def __mul__(self, mtrx):
-        """Multiply this matrix by another matrix (on the right) and return
-        the result.
+        """Right multiply this matrix by another and return.
 
-        Doesn't modify the current matrix"""
+        Multiply this matrix by another matrix (on the right) and return
+        the result. Doesn't modify the current matrix
+        """
         if not self.n == mtrx.m:
             raise ComformabilityError("column dimension of first matrix much"
                                       "match row dimension of second matrix")
@@ -86,6 +94,7 @@ class Matrix:
         return res
 
     def __pos__(self):
+        """Make all elements of matrix positive."""
         res = Matrix(self.m, self.n)
         for i in range(self.m):
             for j in range(self.n):
@@ -94,6 +103,7 @@ class Matrix:
         return res
 
     def __neg__(self):
+        """Make all elements of matrix negative."""
         res = Matrix(self.m, self.n)
         for i in range(self.m):
             for j in range(self.n):
@@ -116,8 +126,11 @@ class Matrix:
         return self
 
     def __imul__(self, mtrx):
-        """Multiply this matrix by another matrix (on the right), modifying
-        it in the process."""
+        """Right multiply this matrix by another and modify.
+
+        Multiply this matrix by another matrix (on the right), modifying
+        it in the process.
+        """
         # calls __mul__
         tmp = self * mtrx
         self.data = tmp.data
@@ -125,18 +138,24 @@ class Matrix:
         return self
 
     def dim(self):
+        """Get matrix dimensions as tuple."""
         return (self.m, self.n)
 
     def get_ij(self, i, j):
+        """Get element in (i, j)th position."""
         return self.data[i][j]
 
     def set_ij(self, i, j, val):
+        """Set element in (i, j)th position."""
         self.data[i][j] = val
 
     @classmethod
     def makeRandom(cls, m, n, min=0, max=1):
-        """Make a random matrix of dimension m by n with elements chosen
-        independently and uniformly from the interval (min, max)."""
+        """Create random matrix.
+
+        Make a random matrix of dimension m by n with elements chosen
+        independently and uniformly from the interval (min, max).
+        """
         obj = Matrix(m, n, init=False)
         for _1 in range(m):
             obj.data.append([random.randrange(min, max) for _2 in range(n)])
@@ -168,8 +187,11 @@ class Matrix:
 
     @classmethod
     def fromList(cls, elems, **kwargs):
-        """Make a matrix from a list of elements, filling along rows,
-        when given at least one dimension of the matrix."""
+        """Make matrix from list.
+
+        Make a matrix from a list of elements, filling along rows,
+        when given at least one dimension of the matrix.
+        """
         if not ('m' in kwargs or 'n' in kwargs):
             raise ValueError("at least one of m and n must be specified")
         m = kwargs['m']
@@ -185,26 +207,31 @@ class Matrix:
 
 
 class MatrixTests(unittest.TestCase):
+    """Unit test functions."""
 
     def testAdd(self):
+        """Test matrix addition."""
         m1 = Matrix(2, 2, [1, 2, 3, 4])
         m2 = Matrix(2, 2, [5, 6, 7, 8])
         m3 = m1 + m2
         self.assertTrue(m3 == Matrix(2, 2, [6, 8, 10, 12]))
 
     def testSub(self):
+        """Test matrix subtraction."""
         m1 = Matrix(2, 2, [1, 2, 3, 4])
         m2 = Matrix(2, 2, [5, 6, 7, 8])
         m3 = m1 - m2
         self.assertTrue(m3 == Matrix(2, 2, [-4, -4, -4, -4]))
 
     def testMul(self):
+        """Test matrix multiplication."""
         m1 = Matrix(2, 2, [1, 2, 3, 4])
         m2 = Matrix(2, 2, [5, 6, 7, 8])
         m3 = m1 * m2
         self.assertTrue(m3 == Matrix(2, 2, [19, 22, 43, 50]))
 
     def testNeg(self):
+        """Test matrix negation."""
         m1 = Matrix(2, 2, [1, 2, 3, 4])
         m2 = -m1
         self.assertTrue(m2 == Matrix(2, 2, [-1, -2, -3, -4]))
