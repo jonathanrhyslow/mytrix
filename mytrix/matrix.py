@@ -3,7 +3,7 @@
 import random
 import unittest
 
-from mytrix.exceptions import ComformabilityError
+import exceptions as exc
 
 __version__ = "0.1"
 
@@ -32,7 +32,7 @@ class Matrix:
     def __str__(self):
         """Generate text representation of matrix."""
         s = '\n'.join([' '.join([str(elem) for elem in row])
-                      for row in self.data])
+                      for row in self.rows])
         return s + '\n'
 
     def __repl__(self):
@@ -41,12 +41,12 @@ class Matrix:
             + str(self.n) + '\n'
         s = s + "with data" + '\n'
         s = s + '\n'.join([' '.join([str(elem) for elem in row])
-                          for row in self.data])
+                          for row in self.rows])
         return s + '\n'
 
     def __eq__(self, mtrx):
         """Evaluate whether two matrices are equivalent."""
-        return self.data == mtrx.data
+        return self.rows == mtrx.rows
 
     def __add__(self, mtrx):
         """Add a matrix to this matrix and return the result.
@@ -54,7 +54,8 @@ class Matrix:
         Doesn't modify the current matrix
         """
         if not (self.m == mtrx.m and self.n == mtrx.n):
-            raise ComformabilityError("matrices must have the same dimensions")
+            raise exc.ComformabilityError(
+                    "matrices must have the same dimensions")
         res = Matrix(self.m, self.n)
         for i in range(self.m):
             for j in range(self.n):
@@ -68,7 +69,8 @@ class Matrix:
         Doesn't modify the current matrix
         """
         if not (self.m == mtrx.m and self.n == mtrx.n):
-            raise ComformabilityError("matrices must have the same dimensions")
+            raise exc.ComformabilityError(
+                    "matrices must have the same dimensions")
         res = Matrix(self.m, self.n)
         for i in range(self.m):
             for j in range(self.n):
@@ -83,8 +85,9 @@ class Matrix:
         the result. Doesn't modify the current matrix
         """
         if not self.n == mtrx.m:
-            raise ComformabilityError("column dimension of first matrix much"
-                                      "match row dimension of second matrix")
+            raise exc.ComformabilityError(
+                    "column dimension of first matrix much match row dimension"
+                    "of second matrix")
         res = Matrix(self.m, mtrx.n)
         for i in range(self.m):
             for j in range(mtrx.n):
@@ -115,14 +118,14 @@ class Matrix:
         """Add a matrix to this matrix, modifying it in the process."""
         # calls __add__
         tmp = self + mtrx
-        self.data = tmp.data
+        self.rows = tmp.rows
         return self
 
     def __isub__(self, mtrx):
         """Subtract a matrix from this matrix, modifying it in the process."""
         # calls __sub__
         tmp = self - mtrx
-        self.data = tmp.data
+        self.rows = tmp.rows
         return self
 
     def __imul__(self, mtrx):
@@ -133,7 +136,7 @@ class Matrix:
         """
         # calls __mul__
         tmp = self * mtrx
-        self.data = tmp.data
+        self.rows = tmp.rows
         self.m, self.n = tmp.dim()
         return self
 
@@ -143,11 +146,11 @@ class Matrix:
 
     def get_ij(self, i, j):
         """Get element in (i, j)th position."""
-        return self.data[i][j]
+        return self.rows[i][j]
 
     def set_ij(self, i, j, val):
         """Set element in (i, j)th position."""
-        self.data[i][j] = val
+        self.rows[i][j] = val
 
     @classmethod
     def makeRandom(cls, m, n, min=0, max=1):
@@ -158,7 +161,7 @@ class Matrix:
         """
         obj = Matrix(m, n, init=False)
         for _1 in range(m):
-            obj.data.append([random.randrange(min, max) for _2 in range(n)])
+            obj.rows.append([random.randrange(min, max) for _2 in range(n)])
         return obj
 
     @classmethod
@@ -171,7 +174,7 @@ class Matrix:
         """Make an identity matrix of dimension m by m."""
         obj = Matrix(m, m, init=False)
         for i in range(m):
-            obj.data.append([1 if i == j else 1 for j in range(m)])
+            obj.rows.append([1 if i == j else 1 for j in range(m)])
         return obj
 
     @classmethod
@@ -182,8 +185,9 @@ class Matrix:
         # check that list of rows is valid
         if any([len(row) != n for row in rows[1:]]):
             raise ValueError("inconsistent row lengths")
-        res = Matrix(m, n, init=False)
-        res.data = rows
+        obj = Matrix(m, n, init=False)
+        obj.rows = rows
+        return(obj)
 
     @classmethod
     def fromList(cls, elems, **kwargs):
@@ -202,7 +206,7 @@ class Matrix:
 
         obj = Matrix(m, m, init=False)
         for i in range(m):
-            obj.data.append(elems[i * m: i * (m + 1)])
+            obj.rows.append(elems[i * m: i * (m + 1)])
         return obj
 
 
@@ -211,30 +215,42 @@ class MatrixTests(unittest.TestCase):
 
     def testAdd(self):
         """Test matrix addition."""
-        m1 = Matrix(2, 2, [1, 2, 3, 4])
-        m2 = Matrix(2, 2, [5, 6, 7, 8])
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        m2 = Matrix.fromRows([[5, 6], [7, 8]])
         m3 = m1 + m2
-        self.assertTrue(m3 == Matrix(2, 2, [6, 8, 10, 12]))
+        self.assertTrue(m3 == Matrix.fromRows([[6, 8], [10, 12]]))
+
+        m4 = Matrix.fromRows([[9, 10]])
+        with self.assertRaises(exc.ComformabilityError):
+            m1 + m4
 
     def testSub(self):
         """Test matrix subtraction."""
-        m1 = Matrix(2, 2, [1, 2, 3, 4])
-        m2 = Matrix(2, 2, [5, 6, 7, 8])
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        m2 = Matrix.fromRows([[5, 6], [7, 8]])
         m3 = m1 - m2
-        self.assertTrue(m3 == Matrix(2, 2, [-4, -4, -4, -4]))
+        self.assertTrue(m3 == Matrix.fromRows([[-4, -4], [-4, -4]]))
+
+        m4 = Matrix.fromRows([[9, 10]])
+        with self.assertRaises(exc.ComformabilityError):
+            m1 - m4
 
     def testMul(self):
         """Test matrix multiplication."""
-        m1 = Matrix(2, 2, [1, 2, 3, 4])
-        m2 = Matrix(2, 2, [5, 6, 7, 8])
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        m2 = Matrix.fromRows([[5, 6], [7, 8]])
         m3 = m1 * m2
-        self.assertTrue(m3 == Matrix(2, 2, [19, 22, 43, 50]))
+        self.assertTrue(m3 == Matrix.fromRows([[19, 22], [43, 50]]))
+
+        m4 = Matrix.fromRows([[9, 10]])
+        with self.assertRaises(exc.ComformabilityError):
+            m1 * m4
 
     def testNeg(self):
         """Test matrix negation."""
-        m1 = Matrix(2, 2, [1, 2, 3, 4])
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
         m2 = -m1
-        self.assertTrue(m2 == Matrix(2, 2, [-1, -2, -3, -4]))
+        self.assertTrue(m2 == Matrix.fromRows([[-1, -2], [-3, -4]]))
 
 
 if __name__ == "__main__":
