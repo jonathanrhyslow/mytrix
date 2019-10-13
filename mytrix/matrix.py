@@ -48,53 +48,90 @@ class Matrix:
         """Evaluate whether two matrices are equivalent."""
         return self.rows == mtrx.rows
 
-    def __add__(self, mtrx):
-        """Add a matrix to this matrix and return the result.
+    def __add__(self, obj):
+        """Add a valid object to this matrix and return the result.
 
-        Doesn't modify the current matrix
+        Doesn't modify the current matrix. Valid objects include other matrices
+        and numeric scalars
         """
-        if not (self.m == mtrx.m and self.n == mtrx.n):
-            raise exc.ComformabilityError(
-                    "matrices must have the same dimensions")
-        res = Matrix(self.m, self.n)
-        for i in range(self.m):
-            for j in range(self.n):
-                val = self.get_ij(i, j) + mtrx.get_ij(i, j)
-                res.set_ij(i, j, val)
-        return res
+        if isinstance(obj, Matrix):
+            if not (self.m == obj.m and self.n == obj.n):
+                raise exc.ComformabilityError(
+                        "matrices must have the same dimensions")
+            res = Matrix(self.m, self.n)
+            for i in range(self.m):
+                for j in range(self.n):
+                    val = self.get_ij(i, j) + obj.get_ij(i, j)
+                    res.set_ij(i, j, val)
+            return res
+        elif self.isNumeric(obj):
+            res = Matrix(self.m, self.n)
+            for i in range(self.m):
+                for j in range(self.n):
+                    val = self.get_ij(i, j) + obj
+                    res.set_ij(i, j, val)
+            return res
+        else:
+            raise TypeError(
+                    "cannot add object of type " + type(obj) + " to matrix")
 
-    def __sub__(self, mtrx):
-        """Subtract a matrix from this matrix and returns the result.
+    def __sub__(self, obj):
+        """Subtract a valid object from this matrix and return the result.
 
-        Doesn't modify the current matrix
+        Doesn't modify the current matrix. Valid objects include other matrices
+        and numeric scalars
         """
-        if not (self.m == mtrx.m and self.n == mtrx.n):
-            raise exc.ComformabilityError(
-                    "matrices must have the same dimensions")
-        res = Matrix(self.m, self.n)
-        for i in range(self.m):
-            for j in range(self.n):
-                val = self.get_ij(i, j) - mtrx.get_ij(i, j)
-                res.set_ij(i, j, val)
-        return res
+        if isinstance(obj, Matrix):
+            if not (self.m == obj.m and self.n == obj.n):
+                raise exc.ComformabilityError(
+                        "matrices must have the same dimensions")
+            res = Matrix(self.m, self.n)
+            for i in range(self.m):
+                for j in range(self.n):
+                    val = self.get_ij(i, j) - obj.get_ij(i, j)
+                    res.set_ij(i, j, val)
+            return res
+        elif self.isNumeric(obj):
+            res = Matrix(self.m, self.n)
+            for i in range(self.m):
+                for j in range(self.n):
+                    val = self.get_ij(i, j) - obj
+                    res.set_ij(i, j, val)
+            return res
+        else:
+            raise TypeError(
+                    "cannot subtract object of type " + type(obj) +
+                    "from matrix")
 
-    def __mul__(self, mtrx):
-        """Right multiply this matrix by another and return.
+    def __mul__(self, obj):
+        """Multiply this matrix by a valid object and return the result.
 
-        Multiply this matrix by another matrix (on the right) and return
-        the result. Doesn't modify the current matrix
+        Doesn't modify the current matrix. Valid objects include other matrices
+        and numeric scalars. In the case where the other object is a matrix,
+        multiplication occurs with the current matrix on the left-hand side
         """
-        if not self.n == mtrx.m:
-            raise exc.ComformabilityError(
-                    "column dimension of first matrix much match row dimension"
-                    "of second matrix")
-        res = Matrix(self.m, mtrx.n)
-        for i in range(self.m):
-            for j in range(mtrx.n):
-                val = sum([self.get_ij(i, k) * mtrx.get_ij(k, j)
-                           for k in range(self.m)])
-                res.set_ij(i, j, val)
-        return res
+        if isinstance(obj, Matrix):
+            if not self.n == obj.m:
+                raise exc.ComformabilityError(
+                        "column dimension of first matrix much match row " +
+                        "dimension of second matrix")
+            res = Matrix(self.m, obj.n)
+            for i in range(self.m):
+                for j in range(obj.n):
+                    val = sum([self.get_ij(i, k) * obj.get_ij(k, j)
+                               for k in range(self.m)])
+                    res.set_ij(i, j, val)
+            return res
+        elif self.isNumeric(obj):
+            res = Matrix(self.m, self.n)
+            for i in range(self.m):
+                for j in range(self.n):
+                    val = self.get_ij(i, j) * obj
+                    res.set_ij(i, j, val)
+            return res
+        else:
+            raise TypeError(
+                    "cannot multiply matrix by object of type " + type(obj))
 
     def __pos__(self):
         """Make all elements of matrix positive."""
@@ -209,42 +246,81 @@ class Matrix:
             obj.rows.append(elems[i * m: i * (m + 1)])
         return obj
 
+    @classmethod
+    def isNumeric(cls, obj):
+        """Check if a given object is of a numeric type.
+
+        Note that since bool inherits from int, that this will accept
+        Boolean values
+        """
+        return isinstance(obj, (int, float, complex))
+
 
 class MatrixTests(unittest.TestCase):
     """Unit test functions."""
 
     def testAdd(self):
-        """Test matrix addition."""
+        """Test addition operator."""
+        # test addition by matrix
         m1 = Matrix.fromRows([[1, 2], [3, 4]])
         m2 = Matrix.fromRows([[5, 6], [7, 8]])
         m3 = m1 + m2
         self.assertTrue(m3 == Matrix.fromRows([[6, 8], [10, 12]]))
 
-        m4 = Matrix.fromRows([[9, 10]])
+        # test addition by scalar
+        m4 = m1 + 1
+        self.assertTrue(m4 == Matrix.fromRows([[2, 3], [4, 5]]))
+
+        # test addition by non-conforming matrix
+        m5 = Matrix.fromRows([[9, 10]])
         with self.assertRaises(exc.ComformabilityError):
-            m1 + m4
+            m1 + m5
+
+        # test addition by non-matrix/numeric object
+        with self.assertRaises(TypeError):
+            m1 + 'spam'
 
     def testSub(self):
-        """Test matrix subtraction."""
+        """Test subtraction operator."""
+        # test subtraction by matrix
         m1 = Matrix.fromRows([[1, 2], [3, 4]])
         m2 = Matrix.fromRows([[5, 6], [7, 8]])
         m3 = m1 - m2
         self.assertTrue(m3 == Matrix.fromRows([[-4, -4], [-4, -4]]))
 
-        m4 = Matrix.fromRows([[9, 10]])
+        # test subtraction by scalar
+        m4 = m1 - 1
+        self.assertTrue(m4 == Matrix.fromRows([[0, 1], [2, 3]]))
+
+        # test subtraction by non-conforming matrix
+        m5 = Matrix.fromRows([[9, 10]])
         with self.assertRaises(exc.ComformabilityError):
-            m1 - m4
+            m1 - m5
+
+        # test subtraction by non-matrix/numeric object
+        with self.assertRaises(TypeError):
+            m1 - 'spam'
 
     def testMul(self):
-        """Test matrix multiplication."""
+        """Test multiplication operator."""
+        # test multiplication by matrix
         m1 = Matrix.fromRows([[1, 2], [3, 4]])
         m2 = Matrix.fromRows([[5, 6], [7, 8]])
         m3 = m1 * m2
         self.assertTrue(m3 == Matrix.fromRows([[19, 22], [43, 50]]))
 
-        m4 = Matrix.fromRows([[9, 10]])
+        # test multiplication by scalar
+        m4 = m1 * 2
+        self.assertTrue(m4 == Matrix.fromRows([[2, 4], [6, 8]]))
+
+        # test multiplication by non-conforming matrix
+        m5 = Matrix.fromRows([[9, 10]])
         with self.assertRaises(exc.ComformabilityError):
-            m1 * m4
+            m1 * m5
+
+        # test multiplication by non-matrix/numeric object
+        with self.assertRaises(TypeError):
+            m1 * 'spam'
 
     def testNeg(self):
         """Test matrix negation."""
