@@ -61,15 +61,15 @@ class Matrix:
             res = Matrix(self.m, self.n)
             for i in range(self.m):
                 for j in range(self.n):
-                    val = self.get_ij(i, j) + obj.get_ij(i, j)
-                    res.set_ij(i, j, val)
+                    val = self[i, j] + obj[i, j]
+                    res[i, j] = val
             return res
         elif self.isNumeric(obj):
             res = Matrix(self.m, self.n)
             for i in range(self.m):
                 for j in range(self.n):
-                    val = self.get_ij(i, j) + obj
-                    res.set_ij(i, j, val)
+                    val = self[i, j] + obj
+                    res[i, j] = val
             return res
         else:
             raise TypeError(
@@ -88,15 +88,15 @@ class Matrix:
             res = Matrix(self.m, self.n)
             for i in range(self.m):
                 for j in range(self.n):
-                    val = self.get_ij(i, j) - obj.get_ij(i, j)
-                    res.set_ij(i, j, val)
+                    val = self[i, j] - obj[i, j]
+                    res[i, j] = val
             return res
         elif self.isNumeric(obj):
             res = Matrix(self.m, self.n)
             for i in range(self.m):
                 for j in range(self.n):
-                    val = self.get_ij(i, j) - obj
-                    res.set_ij(i, j, val)
+                    val = self[i, j] - obj
+                    res[i, j] = val
             return res
         else:
             raise TypeError(
@@ -118,16 +118,16 @@ class Matrix:
             res = Matrix(self.m, obj.n)
             for i in range(self.m):
                 for j in range(obj.n):
-                    val = sum([self.get_ij(i, k) * obj.get_ij(k, j)
+                    val = sum([self[i, k] * obj[k, j]
                                for k in range(self.m)])
-                    res.set_ij(i, j, val)
+                    res[i, j] = val
             return res
         elif self.isNumeric(obj):
             res = Matrix(self.m, self.n)
             for i in range(self.m):
                 for j in range(self.n):
-                    val = self.get_ij(i, j) * obj
-                    res.set_ij(i, j, val)
+                    val = self[i, j] * obj
+                    res[i, j] = val
             return res
         else:
             raise TypeError(
@@ -138,8 +138,8 @@ class Matrix:
         res = Matrix(self.m, self.n)
         for i in range(self.m):
             for j in range(self.n):
-                val = +self.get_ij(i, j)
-                res.set_ij(i, j, val)
+                val = +self[i, j]
+                res[i, j] = val
         return res
 
     def __neg__(self):
@@ -147,8 +147,8 @@ class Matrix:
         res = Matrix(self.m, self.n)
         for i in range(self.m):
             for j in range(self.n):
-                val = -self.get_ij(i, j)
-                res.set_ij(i, j, val)
+                val = -self[i, j]
+                res[i, j] = val
         return res
 
     def __iadd__(self, mtrx):
@@ -181,13 +181,48 @@ class Matrix:
         """Get matrix dimensions as tuple."""
         return (self.m, self.n)
 
-    def get_ij(self, i, j):
+    def __getitem__(self, key):
         """Get element in (i, j)th position."""
-        return self.rows[i][j]
+        self.__check_key_validity(key)
+        return self.rows[key[0]][key[1]]
 
-    def set_ij(self, i, j, val):
+    def __setitem__(self, key, val):
         """Set element in (i, j)th position."""
-        self.rows[i][j] = val
+        self.__check_key_validity(key)
+        self.rows[key[0]][key[1]] = val
+
+    def __check_key_validity(self, key):
+        if not isinstance(key, tuple):
+            raise TypeError("key must be a tuple")
+        if len(key) != 2:
+            raise ValueError("key must be of length two")
+        if not (isinstance(key[0], int) and isinstance(key[1], int)):
+            raise TypeError("elements of key must be integers")
+        if not ((0 <= key[0] < self.m) and (0 <= key[1] < self.n)):
+            raise exc.OutOfBoundsError("key is out of bounds")
+
+    def subset(self, rows, cols):
+        # validation on rows/cols
+        if not (isinstance(rows, list) and isinstance(rows, list)):
+            raise TypeError("arguments must be lists")
+        if len(rows) == 0 or len(cols) == 0:
+            raise ValueError("subset cannot be empty")
+        # validation on elements of rows/cols
+        for i, elem in enumerate(rows + cols):
+            if not isinstance(elem, int):
+                raise TypeError("elements of rows/cols must be integers")
+            # if element represents a row
+            if i < len(rows):
+                if not 0 <= elem < self.m:
+                    raise exc.OutOfBoundsError("key is out of bounds")
+            else:
+                if not 0 <= elem < self.n:
+                    raise exc.OutOfBoundsError("key is out of bounds")
+        # subset matrix
+        obj = Matrix(len(rows), len(cols), init=False)
+        for r in rows:
+            obj.rows.append([self[r, c] for c in cols])
+        return obj
 
     @classmethod
     def makeRandom(cls, m, n, min=0, max=1):
@@ -328,6 +363,79 @@ class MatrixTests(unittest.TestCase):
         m2 = -m1
         self.assertTrue(m2 == Matrix.fromRows([[-1, -2], [-3, -4]]))
 
+    def testGetItem(self):
+        """Test getting of matrix element."""
+        # test getting element using valid key
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        self.assertTrue(m1[1, 1] == 4)
+
+        # test getting element using invalid key
+        with self.assertRaises(TypeError):
+            m1['spam']
+        # TypeError check (must me tuple) is performed before ValueError
+        # check (must be length two) so m1[1] raises TypeError
+        with self.assertRaises(TypeError):
+            m1[1]
+        with self.assertRaises(ValueError):
+            m1[1, 1, 1]
+        with self.assertRaises(TypeError):
+            m1[1, 'spam']
+        with self.assertRaises(exc.OutOfBoundsError):
+            m1[-1, 1]
+        with self.assertRaises(exc.OutOfBoundsError):
+            m1[1, -1]
+        with self.assertRaises(exc.OutOfBoundsError):
+            m1[2, 1]
+        with self.assertRaises(exc.OutOfBoundsError):
+            m1[1, 2]
+
+    def testSetItem(self):
+        """Test setting of matrix element."""
+        # test setting element using valid key
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        m1[1, 1] = 5
+        self.assertTrue(m1 == Matrix.fromRows([[1, 2], [3, 5]]))
+
+        # test setting element using invalid key
+        with self.assertRaises(TypeError):
+            m1['spam'] = 5
+        # TypeError check (must me tuple) is performed before ValueError
+        # check (must be length two) so m1[1] raises TypeError
+        with self.assertRaises(TypeError):
+            m1[1] = 5
+        with self.assertRaises(ValueError):
+            m1[1, 1, 1] = 5
+        with self.assertRaises(TypeError):
+            m1[1, 'spam'] = 5
+        with self.assertRaises(exc.OutOfBoundsError):
+            m1[-1, 1] = 5
+        with self.assertRaises(exc.OutOfBoundsError):
+            m1[1, -1] = 5
+        with self.assertRaises(exc.OutOfBoundsError):
+            m1[2, 1] = 5
+        with self.assertRaises(exc.OutOfBoundsError):
+            m1[1, 2] = 5
+
+    def testSubset(self):
+        """Test matrix subsetting."""
+        # test subsetting matrix using valid rows/cols
+        m1 = Matrix.fromRows([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+        m2 = m1.subset([0, 2], [1])
+        self.assertTrue(m2 == Matrix.fromRows([[2], [8]]))
+
+        # test subsetting matrix using invalid rows/cols
+        with self.assertRaises(TypeError):
+            m1.subset([0, 2], 'spam')
+        with self.assertRaises(ValueError):
+            m1.subset([0, 2], [])
+        with self.assertRaises(exc.OutOfBoundsError):
+            m1.subset([-1, 2], [1])
+        with self.assertRaises(exc.OutOfBoundsError):
+            m1.subset([0, 2], [-1])
+        with self.assertRaises(exc.OutOfBoundsError):
+            m1.subset([0, 3], [1])
+        with self.assertRaises(exc.OutOfBoundsError):
+            m1.subset([0, 2], [3])
 
 if __name__ == "__main__":
     unittest.main()
