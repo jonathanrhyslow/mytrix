@@ -45,8 +45,16 @@ class Matrix:
         return s + '\n'
 
     def __eq__(self, mtrx):
-        """Evaluate whether two matrices are equivalent."""
-        return self.rows == mtrx.rows
+        """Evaluate whether two matrices are equal."""
+        if not isinstance(mtrx, Matrix):
+            return False
+        if not (self.m == mtrx.m and self.n == mtrx.n):
+            return False
+        for i in range(self.m):
+            for j in range(self.n):
+                if self[i, j] != mtrx[i, j]:
+                    return False
+        return True
 
     def __add__(self, obj):
         """Add a valid object to this matrix and return the result.
@@ -362,6 +370,13 @@ class MatrixTests(unittest.TestCase):
         m1 = Matrix.fromRows([[1, 2], [3, 4]])
         m2 = -m1
         self.assertTrue(m2 == Matrix.fromRows([[-1, -2], [-3, -4]]))
+
+    def testEq(self):
+        """Test matrix equality."""
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        self.assertTrue(m1 == Matrix.fromRows([[1, 2], [3, 4]]))
+        self.assertTrue(not m1 == 'spam')
+        self.assertTrue(not m1 == Matrix.fromRows([[1, 2], [3, 4], [5, 6]]))
 
     def testGetItem(self):
         """Test getting of matrix element."""
