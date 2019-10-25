@@ -191,6 +191,16 @@ class MatrixTests(unittest.TestCase):
         with self.assertRaises(exc.OutOfBoundsError):
             m1.subset([0, 2], [3])
 
+    def testTranspose(self):
+        """Test matrix transposition."""
+        # test transposition
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        self.assertTrue(m1.transpose() == Matrix.fromRows([[1, 3], [2, 4]]))
+
+        # test involution property of transposition
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        self.assertTrue(m1.transpose().transpose() == m1)
+
 
 if __name__ == "__main__":
     unittest.main()

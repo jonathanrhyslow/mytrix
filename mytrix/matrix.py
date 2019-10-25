@@ -235,7 +235,7 @@ class Matrix:
         """Transpose this matrix and return the result."""
         m, n = self.n, self.m
         res = Matrix(m, n, init=False)
-        res.rows = [list(col) for col in zip(*self.rows)]
+        res.data = [list(col) for col in zip(*self.data)]
         return res
 
     @classmethod
