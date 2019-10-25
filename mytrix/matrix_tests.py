@@ -201,6 +201,32 @@ class MatrixTests(unittest.TestCase):
         m1 = Matrix.fromRows([[1, 2], [3, 4]])
         self.assertTrue(m1.transpose().transpose() == m1)
 
+    def testSymmetry(self):
+        """Test matrix symmetry."""
+        # test symmetry
+        m1 = Matrix.fromRows([[1, 2], [2, 4]])
+        self.assertTrue(m1.is_symmetric())
+        m2 = Matrix.fromRows([[1, 2], [3, 4]])
+        self.assertTrue(not m2.is_symmetric())
+
+        # test skew-symmetry
+        m3 = Matrix.fromRows([[0, 2], [-2, 0]])
+        self.assertTrue(m3.is_skew_symmetric())
+        self.assertTrue(not m2.is_skew_symmetric())
+
+    def testToeplitzDecomposition(self):
+        """Test Toeplitz decomposition."""
+        # test decomposition on square matrix
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        sym, skew = m1.toeplitz_decomposition()
+        self.assertTrue(sym.is_symmetric())
+        self.assertTrue(skew.is_skew_symmetric())
+
+        # test decomposition on non-square matrix
+        m2 = Matrix.fromRows([[1, 2], [3, 4], [5, 6]])
+        with self.assertRaises(exc.DecompositionError):
+            m2.toeplitz_decomposition()
+
 
 if __name__ == "__main__":
     unittest.main()
