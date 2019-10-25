@@ -224,6 +224,13 @@ class Matrix:
             obj.rows.append([self[r, c] for c in cols])
         return obj
 
+    def transpose(self):
+        """Return a transpose matrix"""
+        m, n = self.n, self.m 
+        matrix = Matrix(m, n)
+        matrix.rows = [list(item) for item in zip(*self.rows)]
+        return matrix
+
     @classmethod
     def makeRandom(cls, m, n, min=0, max=1):
         """Create random matrix.
@@ -436,6 +443,16 @@ class MatrixTests(unittest.TestCase):
             m1.subset([0, 3], [1])
         with self.assertRaises(exc.OutOfBoundsError):
             m1.subset([0, 2], [3])
+
+    def testTranspose(self):
+        """Test matrix transposition."""
+        # test transposition
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        self.assertTrue(m1.transpose() == Matrix.fromRows([[1, 3], [2, 4]]))
+
+        # test double transposition, should return original matrix
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        self.assertTrue(m1.transpose().transpose() == Matrix.fromRows([[1, 2], [3, 4]]))
 
 if __name__ == "__main__":
     unittest.main()
