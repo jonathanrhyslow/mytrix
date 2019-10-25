@@ -225,11 +225,11 @@ class Matrix:
         return obj
 
     def transpose(self):
-        """Return a transpose matrix"""
-        m, n = self.n, self.m 
-        matrix = Matrix(m, n)
-        matrix.rows = [list(item) for item in zip(*self.rows)]
-        return matrix
+        """Transpose this matrix and return the result."""
+        m, n = self.n, self.m
+        res = Matrix(m, n, init=False)
+        res.rows = [list(col) for col in zip(*self.rows)]
+        return res
 
     @classmethod
     def makeRandom(cls, m, n, min=0, max=1):
@@ -450,9 +450,10 @@ class MatrixTests(unittest.TestCase):
         m1 = Matrix.fromRows([[1, 2], [3, 4]])
         self.assertTrue(m1.transpose() == Matrix.fromRows([[1, 3], [2, 4]]))
 
-        # test double transposition, should return original matrix
+        # test involution property of transposition
         m1 = Matrix.fromRows([[1, 2], [3, 4]])
-        self.assertTrue(m1.transpose().transpose() == Matrix.fromRows([[1, 2], [3, 4]]))
+        self.assertTrue(m1.transpose().transpose() == m1)
+
 
 if __name__ == "__main__":
     unittest.main()
