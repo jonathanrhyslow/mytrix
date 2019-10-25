@@ -238,6 +238,27 @@ class Matrix:
         res.data = [list(col) for col in zip(*self.data)]
         return res
 
+    def is_symmetric(self):
+        """Return True if and only if this matrix is symmetric."""
+        return self == self.transpose()
+
+    def is_skew_symmetric(self):
+        """Return True if and only if this matrix is skew-symmetric."""
+        return self == -self.transpose()
+
+    def toeplitz_decomposition(self):
+        """Apply the Toeplitz decomposition to this matrix.
+
+        Decompose this matrix into the sum of a symmetric and skew-symmetric
+        matrix, returning the result as a tuple.
+        """
+        if self.m != self.n:
+            raise exc.DecompositionError("non-square matrices do not have a " +
+                                         "a Toeplitz decomposition")
+        sym = (self + self.transpose()) * .5
+        skew = (self - self.transpose()) * .5
+        return sym, skew
+
     @classmethod
     def makeRandom(cls, m, n, min=0, max=1):
         """Create random matrix.
