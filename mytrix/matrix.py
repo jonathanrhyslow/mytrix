@@ -22,14 +22,14 @@ class Matrix:
         if not isinstance(init, bool):
             raise TypeError("init must be Boolean")
         if init:
-            self.rows = [[0]*n for _ in range(m)]
+            self.data = [[0]*n for _ in range(m)]
         else:
-            self.rows = []
+            self.data = []
 
     def __str__(self):
         """Generate text representation of matrix."""
         s = '\n'.join([' '.join([str(elem) for elem in row])
-                      for row in self.rows])
+                      for row in self.data])
         return s + '\n'
 
     def __repl__(self):
@@ -38,7 +38,7 @@ class Matrix:
             + str(self.n) + '\n'
         s = s + "with data" + '\n'
         s = s + '\n'.join([' '.join([str(elem) for elem in row])
-                          for row in self.rows])
+                          for row in self.data])
         return s + '\n'
 
     def __eq__(self, mtrx):
@@ -139,7 +139,7 @@ class Matrix:
                     "cannot multiply matrix by object of type " + type(obj))
 
     def __pos__(self):
-        """Make all elements of matrix positive."""
+        """Unary positive. Included for symmetry only."""
         res = Matrix(self.m, self.n)
         for i in range(self.m):
             for j in range(self.n):
@@ -148,7 +148,7 @@ class Matrix:
         return res
 
     def __neg__(self):
-        """Make all elements of matrix negative."""
+        """Negate all elements of the matrix."""
         res = Matrix(self.m, self.n)
         for i in range(self.m):
             for j in range(self.n):
@@ -156,29 +156,29 @@ class Matrix:
                 res[i, j] = val
         return res
 
-    def __iadd__(self, mtrx):
+    def __iadd__(self, obj):
         """Add a matrix to this matrix, modifying it in the process."""
         # calls __add__
-        tmp = self + mtrx
-        self.rows = tmp.rows
+        tmp = self + obj
+        self.data = tmp.data
         return self
 
-    def __isub__(self, mtrx):
+    def __isub__(self, obj):
         """Subtract a matrix from this matrix, modifying it in the process."""
         # calls __sub__
-        tmp = self - mtrx
-        self.rows = tmp.rows
+        tmp = self - obj
+        self.data = tmp.data
         return self
 
-    def __imul__(self, mtrx):
+    def __imul__(self, obj):
         """Right multiply this matrix by another and modify.
 
         Multiply this matrix by another matrix (on the right), modifying
         it in the process.
         """
         # calls __mul__
-        tmp = self * mtrx
-        self.rows = tmp.rows
+        tmp = self * obj
+        self.data = tmp.data
         self.m, self.n = tmp.dim()
         return self
 
@@ -189,14 +189,15 @@ class Matrix:
     def __getitem__(self, key):
         """Get element in (i, j)th position."""
         self.__check_key_validity(key)
-        return self.rows[key[0]][key[1]]
+        return self.data[key[0]][key[1]]
 
     def __setitem__(self, key, val):
         """Set element in (i, j)th position."""
         self.__check_key_validity(key)
-        self.rows[key[0]][key[1]] = val
+        self.data[key[0]][key[1]] = val
 
     def __check_key_validity(self, key):
+        """Validate keys for __getitem__() and __setitem__() methods."""
         if not isinstance(key, tuple):
             raise TypeError("key must be a tuple")
         if len(key) != 2:
@@ -206,27 +207,28 @@ class Matrix:
         if not ((0 <= key[0] < self.m) and (0 <= key[1] < self.n)):
             raise exc.OutOfBoundsError("key is out of bounds")
 
-    def subset(self, rows, cols):
-        # validation on rows/cols
-        if not (isinstance(rows, list) and isinstance(rows, list)):
+    def subset(self, data, cols):
+        """Extract subset of data and columns and form into a new matrix."""
+        # validation on data/cols
+        if not (isinstance(data, list) and isinstance(data, list)):
             raise TypeError("arguments must be lists")
-        if len(rows) == 0 or len(cols) == 0:
+        if len(data) == 0 or len(cols) == 0:
             raise ValueError("subset cannot be empty")
-        # validation on elements of rows/cols
-        for i, elem in enumerate(rows + cols):
+        # validation on elements of data/cols
+        for i, elem in enumerate(data + cols):
             if not isinstance(elem, int):
-                raise TypeError("elements of rows/cols must be integers")
+                raise TypeError("elements of data/cols must be integers")
             # if element represents a row
-            if i < len(rows):
+            if i < len(data):
                 if not 0 <= elem < self.m:
                     raise exc.OutOfBoundsError("key is out of bounds")
             else:
                 if not 0 <= elem < self.n:
                     raise exc.OutOfBoundsError("key is out of bounds")
         # subset matrix
-        obj = Matrix(len(rows), len(cols), init=False)
-        for r in rows:
-            obj.rows.append([self[r, c] for c in cols])
+        obj = Matrix(len(data), len(cols), init=False)
+        for r in data:
+            obj.data.append([self[r, c] for c in cols])
         return obj
 
     @classmethod
@@ -238,7 +240,7 @@ class Matrix:
         """
         obj = Matrix(m, n, init=False)
         for _1 in range(m):
-            obj.rows.append([random.randrange(min, max) for _2 in range(n)])
+            obj.data.append([random.randrange(min, max) for _2 in range(n)])
         return obj
 
     @classmethod
@@ -251,26 +253,26 @@ class Matrix:
         """Make an identity matrix of dimension m by m."""
         obj = Matrix(m, m, init=False)
         for i in range(m):
-            obj.rows.append([1 if i == j else 1 for j in range(m)])
+            obj.data.append([1 if i == j else 1 for j in range(m)])
         return obj
 
     @classmethod
-    def fromRows(cls, rows):
-        """Make a matrix from a list of rows."""
-        m = len(rows)
-        n = len(rows[0])
-        # check that list of rows is valid
-        if any([len(row) != n for row in rows[1:]]):
+    def fromRows(cls, data):
+        """Make a matrix from a list of data."""
+        m = len(data)
+        n = len(data[0])
+        # check that list of data is valid
+        if any([len(row) != n for row in data[1:]]):
             raise ValueError("inconsistent row lengths")
         obj = Matrix(m, n, init=False)
-        obj.rows = rows
+        obj.data = data
         return(obj)
 
     @classmethod
     def fromList(cls, elems, **kwargs):
         """Make matrix from list.
 
-        Make a matrix from a list of elements, filling along rows,
+        Make a matrix from a list of elements, filling along data,
         when given at least one dimension of the matrix.
         """
         if not ('m' in kwargs or 'n' in kwargs):
@@ -283,7 +285,7 @@ class Matrix:
 
         obj = Matrix(m, m, init=False)
         for i in range(m):
-            obj.rows.append(elems[i * m: i * (m + 1)])
+            obj.data.append(elems[i * m: i * (m + 1)])
         return obj
 
     @classmethod
