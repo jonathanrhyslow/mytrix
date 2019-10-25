@@ -1,5 +1,6 @@
 """Module for general matrix class."""
 
+from copy import deepcopy
 import random
 
 import exceptions as exc
@@ -52,6 +53,26 @@ class Matrix:
                 if self[i, j] != mtrx[i, j]:
                     return False
         return True
+
+    def __copy__(self):
+        """Create a shallow copy of this matrix.
+
+        Creates a new instance of Matrix but with data referencing the data
+        of the original matrix.
+        """
+        res = Matrix(self.m, self.n, init=False)
+        res.data = self.data
+        return res
+
+    def __deepcopy__(self, memodict={}):
+        """Create a deep copy of this matrix.
+
+        Creates a new instance of Matrix with data copied from the original
+        matrix.
+        """
+        res = Matrix(self.m, self.n, init=False)
+        res.data = deepcopy(self.data)
+        return res
 
     def __add__(self, obj):
         """Add a valid object to this matrix and return the result.

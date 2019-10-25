@@ -1,5 +1,6 @@
 """Module for testing general matrix class."""
 
+from copy import copy, deepcopy
 import unittest
 
 from matrix import Matrix
@@ -32,6 +33,22 @@ class MatrixTests(unittest.TestCase):
         # test initialising with invalid init
         with self.assertRaises(TypeError):
             Matrix(2, 2, 'spam')
+
+    def testCopy(self):
+        """Test shallow and deep copying."""
+        # test shallow copying
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        m2 = copy(m1)
+        self.assertTrue(m2 is not m1)
+        m2[1, 1] = 5
+        self.assertTrue(m1[1, 1] == 5)
+
+        # test deep copying
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        m2 = deepcopy(m1)
+        self.assertTrue(m2 is not m1)
+        m2[1, 1] = 5
+        self.assertTrue(m1[1, 1] == 4)
 
     def testStr(self):
         """Test string method."""
