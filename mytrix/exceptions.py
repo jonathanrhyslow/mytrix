@@ -12,7 +12,14 @@ class LinearAlgebraError(Exception):
 
     pass
 
+
 class OutOfBoundsError(Exception):
     """An exception class for out of bounds errors."""
+
+    pass
+
+
+class DecompositionError(Exception):
+    """An exception class for impossible decompositions."""
 
     pass
