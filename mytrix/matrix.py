@@ -231,6 +231,13 @@ class Matrix:
             obj.data.append([self[r, c] for c in cols])
         return obj
 
+    def transpose(self):
+        """Transpose this matrix and return the result."""
+        m, n = self.n, self.m
+        res = Matrix(m, n, init=False)
+        res.rows = [list(col) for col in zip(*self.rows)]
+        return res
+
     @classmethod
     def makeRandom(cls, m, n, min=0, max=1):
         """Create random matrix.
