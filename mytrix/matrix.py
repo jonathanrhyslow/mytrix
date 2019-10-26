@@ -1,5 +1,6 @@
 """Module for general matrix class."""
 
+from copy import deepcopy
 import random
 
 import exceptions as exc
@@ -52,6 +53,26 @@ class Matrix:
                 if self[i, j] != mtrx[i, j]:
                     return False
         return True
+
+    def __copy__(self):
+        """Create a shallow copy of this matrix.
+
+        Creates a new instance of Matrix but with data referencing the data
+        of the original matrix.
+        """
+        res = Matrix(self.m, self.n, init=False)
+        res.data = self.data
+        return res
+
+    def __deepcopy__(self, memodict={}):
+        """Create a deep copy of this matrix.
+
+        Creates a new instance of Matrix with data copied from the original
+        matrix.
+        """
+        res = Matrix(self.m, self.n, init=False)
+        res.data = deepcopy(self.data)
+        return res
 
     def __add__(self, obj):
         """Add a valid object to this matrix and return the result.
@@ -259,6 +280,53 @@ class Matrix:
         skew = (self - self.transpose()) * .5
         return sym, skew
 
+    def row_reduce(self):
+        """Return the row-reduced form of this matrix."""
+        res = self.row_echelon()
+        for i in range(1, res.m):
+            for j in range(res.n):
+                if res[i, j] == 1:
+                    for k in range(i):
+                        constant = res[k, j]
+                        res.data[k] = [elem_k - elem_i * constant
+                                       for elem_i, elem_k in
+                                       zip(res.data[i], res.data[k])]
+                    break
+        return res
+
+    def row_echelon(self):
+        """Return the row-echelon form of this matrix."""
+        # TODO: This can be refactored for better efficiency
+        if all([all([self[i, j] == 0 for j in range(self.n)])
+                for i in range(self.m)]):
+            return Matrix.makeZero(self.m, self.n)
+        res = deepcopy(self)
+        i, j = 0, 0
+        while i < res.m and j < res.n:
+            # Use R2 to make pivot non-zero
+            if res[i, j] == 0:
+                found_non_zero = False
+                for k in range(i, res.m):
+                    if res[k, j] != 0:
+                        found_non_zero = True
+                        break
+                if not found_non_zero:
+                    j += 1
+                    continue
+                res.data[i], res.data[k] = res.data[k], res.data[i]
+            # Use R3 to make pivot one
+            if res[i, j] != 1:
+                res.data[i] = [elem / res[i, j] for elem in res.data[i]]
+            # Use R1 to eliminate entries below the pivot
+            for k in range(i + 1, res.m):
+                if res[k, j] != 0:
+                    constant = res[k, j] / res[i, j]
+                    res.data[k] = [elem_k - elem_i * constant
+                                   for elem_i, elem_k in
+                                   zip(res.data[i], res.data[k])]
+            i, j = i + 1, j + 1
+        return res
+
     @classmethod
     def makeRandom(cls, m, n, min=0, max=1):
         """Create random matrix.
@@ -281,7 +349,7 @@ class Matrix:
         """Make an identity matrix of dimension m by m."""
         obj = Matrix(m, m, init=False)
         for i in range(m):
-            obj.data.append([1 if i == j else 1 for j in range(m)])
+            obj.data.append([1 if i == j else 0 for j in range(m)])
         return obj
 
     @classmethod

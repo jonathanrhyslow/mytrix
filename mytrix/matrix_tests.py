@@ -1,5 +1,6 @@
 """Module for testing general matrix class."""
 
+from copy import copy, deepcopy
 import unittest
 
 from matrix import Matrix
@@ -32,6 +33,22 @@ class MatrixTests(unittest.TestCase):
         # test initialising with invalid init
         with self.assertRaises(TypeError):
             Matrix(2, 2, 'spam')
+
+    def testCopy(self):
+        """Test shallow and deep copying."""
+        # test shallow copying
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        m2 = copy(m1)
+        self.assertTrue(m2 is not m1)
+        m2[1, 1] = 5
+        self.assertTrue(m1[1, 1] == 5)
+
+        # test deep copying
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        m2 = deepcopy(m1)
+        self.assertTrue(m2 is not m1)
+        m2[1, 1] = 5
+        self.assertTrue(m1[1, 1] == 4)
 
     def testStr(self):
         """Test string method."""
@@ -226,6 +243,45 @@ class MatrixTests(unittest.TestCase):
         m2 = Matrix.fromRows([[1, 2], [3, 4], [5, 6]])
         with self.assertRaises(exc.DecompositionError):
             m2.toeplitz_decomposition()
+
+    def testRowReduction(self):
+        """Test reduction to row-reduced and row-echelon form."""
+        # test reduction to row-echelon form
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        self.assertTrue(m1.row_echelon() == Matrix.fromRows([[1, 2], [0, 1]]))
+
+        # test reduction to row-echelon form on the zero matrix
+        m2 = Matrix.makeZero(2, 2)
+        self.assertTrue(m2.row_echelon() == Matrix.makeZero(2, 2))
+
+        # test reduction to row-echelon form on the matrix with only one row
+        m3 = Matrix.fromRows([[1, 2, 3, 4]])
+        self.assertTrue(m3.row_reduce() == Matrix.fromRows([[1, 2, 3, 4]]))
+
+        # test reduction to row-echelon form on the matrix with only one column
+        m4 = Matrix.fromRows([[1], [2], [3], [4]])
+        self.assertTrue(m4.row_reduce() == Matrix.fromRows([[1], [0],
+                                                            [0], [0]]))
+
+        # test idompotency of reduction to row-echelon form
+        self.assertTrue(m1.row_echelon() == m1.row_echelon().row_echelon())
+
+        # test row reduction
+        self.assertTrue(m1.row_reduce() == Matrix.makeIdentity(2))
+
+        # test row reduction on the zero matrix
+        self.assertTrue(m2.row_reduce() == Matrix.makeZero(2, 2))
+
+        # test row reduction on the matrix with only one row
+        m3 = Matrix.fromRows([[1, 2, 3, 4]])
+        self.assertTrue(m3.row_reduce() == Matrix.fromRows([[1, 2, 3, 4]]))
+
+        # test row reduction on the matrix with only one column
+        self.assertTrue(m4.row_reduce() == Matrix.fromRows([[1], [0],
+                                                            [0], [0]]))
+
+        # test idompotency of reduction to row-echelon form
+        self.assertTrue(m1.row_reduce() == m1.row_reduce().row_reduce())
 
 
 if __name__ == "__main__":
