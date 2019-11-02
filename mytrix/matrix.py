@@ -126,6 +126,34 @@ class Matrix:
             raise TypeError(
                     "cannot add object of type " + type(obj) + " to matrix")
 
+    def __floordiv__(self, obj):
+        """Divide this matrix by a scalar.
+
+        Doesn't modify the current matrix
+        """
+        if Matrix.is_numeric(obj):
+            data = [[self[i, j] // obj
+                    for j in range(self.n)]
+                    for i in range(self.m)]
+            return Matrix(self.m, self.n, data)
+        else:
+            raise TypeError(
+                    "cannot add object of type " + type(obj) + " to matrix")
+
+    def __truediv__(self, obj):
+        """Divide this matrix by a scalar.
+
+        Doesn't modify the current matrix
+        """
+        if Matrix.is_numeric(obj):
+            data = [[self[i, j] / obj
+                    for j in range(self.n)]
+                    for i in range(self.m)]
+            return Matrix(self.m, self.n, data)
+        else:
+            raise TypeError(
+                    "cannot add object of type " + type(obj) + " to matrix")
+
     def __pos__(self):
         """Unary positive. Included for symmetry only."""
         data = [[+self[i, j] for j in range(self.n)] for i in range(self.m)]
@@ -161,6 +189,36 @@ class Matrix:
         self.data = tmp.data
         self.m, self.n = tmp.dim()
         return self
+
+    def __ifloordiv__(self, obj):
+        """Divide this matrix by a scalar, modifying it in the process."""
+        # calls __floordiv__
+        tmp = self // obj
+        self.data = tmp.data
+        return self
+
+    def __itruediv__(self, obj):
+        """Divide this matrix by a scalar, modifying it in the process."""
+        # calls __truediv__
+        tmp = self / obj
+        self.data = tmp.data
+        return self
+
+    def __radd__(self, obj):
+        """Implement reflected addition."""
+        # calls __add__
+        return self + obj
+
+    def __rsub__(self, obj):
+        """Implement reflected subtraction."""
+        # calls __sub__
+        return -self + obj
+
+    def __rmul__(self, obj):
+        """Implement reflected multiplication."""
+        # calls __mul__
+        # note, if two matrices are multiplied, __mul__ takes precedence
+        return self * obj
 
     def dim(self):
         """Get matrix dimensions as tuple."""
