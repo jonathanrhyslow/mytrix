@@ -10,30 +10,6 @@ import exceptions as exc
 class MatrixTests(unittest.TestCase):
     """Unit test functions."""
 
-    def testInit(self):
-        """Test initialiser."""
-        # test initialising with valid dimensions
-        m1 = Matrix(2, 2)
-        self.assertTrue(m1.m == 2)
-        self.assertTrue(m1.n == 2)
-        self.assertTrue(m1.data == [[0, 0], [0, 0]])
-
-        # test initialising with valid dimensions but no data attribute
-        m2 = Matrix(2, 2, init=False)
-        self.assertTrue(m2.m == 2)
-        self.assertTrue(m2.n == 2)
-        self.assertTrue(m2.data == [])
-
-        # test initialising with invald dimensions
-        with self.assertRaises(TypeError):
-            Matrix(2, 'spam')
-        with self.assertRaises(ValueError):
-            Matrix(2, 0)
-
-        # test initialising with invalid init
-        with self.assertRaises(TypeError):
-            Matrix(2, 2, 'spam')
-
     def testCopy(self):
         """Test shallow and deep copying."""
         # test shallow copying
