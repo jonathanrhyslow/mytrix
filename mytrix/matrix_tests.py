@@ -10,30 +10,6 @@ import exceptions as exc
 class MatrixTests(unittest.TestCase):
     """Unit test functions."""
 
-    def testInit(self):
-        """Test initialiser."""
-        # test initialising with valid dimensions
-        m1 = Matrix(2, 2)
-        self.assertTrue(m1.m == 2)
-        self.assertTrue(m1.n == 2)
-        self.assertTrue(m1.data == [[0, 0], [0, 0]])
-
-        # test initialising with valid dimensions but no data attribute
-        m2 = Matrix(2, 2, init=False)
-        self.assertTrue(m2.m == 2)
-        self.assertTrue(m2.n == 2)
-        self.assertTrue(m2.data == [])
-
-        # test initialising with invald dimensions
-        with self.assertRaises(TypeError):
-            Matrix(2, 'spam')
-        with self.assertRaises(ValueError):
-            Matrix(2, 0)
-
-        # test initialising with invalid init
-        with self.assertRaises(TypeError):
-            Matrix(2, 2, 'spam')
-
     def testCopy(self):
         """Test shallow and deep copying."""
         # test shallow copying
@@ -108,18 +84,101 @@ class MatrixTests(unittest.TestCase):
         m3 = m1 * m2
         self.assertTrue(m3 == Matrix.fromRows([[19, 22], [43, 50]]))
 
+        # test multiplication by non-square (but conforming) matrix
+        m3 = Matrix.fromRows([[5, 6, 7], [8, 9, 10]])
+        m4 = m1 * m3
+        self.assertTrue(m4 == Matrix.fromRows([[21, 24, 27], [47, 54, 61]]))
+
         # test multiplication by scalar
-        m4 = m1 * 2
-        self.assertTrue(m4 == Matrix.fromRows([[2, 4], [6, 8]]))
+        m5 = m1 * 2
+        self.assertTrue(m5 == Matrix.fromRows([[2, 4], [6, 8]]))
 
         # test multiplication by non-conforming matrix
-        m5 = Matrix.fromRows([[9, 10]])
+        m6 = Matrix.fromRows([[9, 10]])
         with self.assertRaises(exc.ComformabilityError):
-            m1 * m5
+            m1 * m6
 
         # test multiplication by non-matrix/numeric object
         with self.assertRaises(TypeError):
             m1 * 'spam'
+
+    def testDiv(self):
+        """Test division operator."""
+        # test true division by matrix
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        m2 = Matrix.fromRows([[5, 6], [7, 8]])
+        with self.assertRaises(TypeError):
+            m1 / m2
+
+        # test true division by scalar
+        m3 = m1 / 2
+        self.assertTrue(m3 == Matrix.fromRows([[.5, 1.], [1.5, 2.]]))
+
+        # test true division by non-matrix/numeric object
+        with self.assertRaises(TypeError):
+            m1 / 'spam'
+
+        # test floor division by matrix
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        m2 = Matrix.fromRows([[5, 6], [7, 8]])
+        with self.assertRaises(TypeError):
+            m1 // m2
+
+        # test floor division by scalar
+        m3 = m1 // 2
+        self.assertTrue(m3 == Matrix.fromRows([[0, 1], [1, 2]]))
+
+        # test floor division by non-matrix/numeric object
+        with self.assertRaises(TypeError):
+            m1 // 'spam'
+
+    def testArithmeticAssignment(self):
+        """Test matrix arithmetic using assignment magics."""
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        m2 = Matrix.fromRows([[5, 6], [7, 8]])
+
+        # test addition
+        m1 += m2
+        self.assertTrue(m1 == Matrix.fromRows([[6, 8], [10, 12]]))
+        m1 += 1
+        self.assertTrue(m1 == Matrix.fromRows([[7, 9], [11, 13]]))
+
+        # test subtraction
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])  # reset m1
+        m1 -= m2
+        self.assertTrue(m1 == Matrix.fromRows([[-4, -4], [-4, -4]]))
+        m1 -= 1
+        self.assertTrue(m1 == Matrix.fromRows([[-5, -5], [-5, -5]]))
+
+        # test multiplication
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])  # reset m1
+        m1 *= m2
+        self.assertTrue(m1 == Matrix.fromRows([[19, 22], [43, 50]]))
+        m1 *= 2
+        self.assertTrue(m1 == Matrix.fromRows([[38, 44], [86, 100]]))
+
+        # test division
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])  # reset m1
+        m1 //= 2
+        self.assertTrue(m1 == Matrix.fromRows([[0, 1], [1, 2]]))
+        m1 /= 2
+        self.assertTrue(m1 == Matrix.fromRows([[0., .5], [.5, 1.]]))
+
+    def testArithmeticReflection(self):
+        """Test matrix arithmetic using reflection magics."""
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+
+        # test addition
+        m2 = 1 + m1
+        self.assertTrue(m2 == Matrix.fromRows([[2, 3], [4, 5]]))
+
+        # test subtraction
+        m2 = 1 - m1
+        self.assertTrue(m2 == Matrix.fromRows([[0, -1], [-2, -3]]))
+
+        # test multiplication
+        m2 = 2 * m1
+        self.assertTrue(m2 == Matrix.fromRows([[2, 4], [6, 8]]))
 
     def testNeg(self):
         """Test matrix negation."""
