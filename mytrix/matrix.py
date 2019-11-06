@@ -21,14 +21,12 @@ class Matrix:
                       for row in self.data])
         return s + '\n'
 
-    def __repl__(self):
+    def __repr__(self):
         """Generate reproducible representation of matrix."""
-        s = "Matrix of dimension " + str(self.m) + " by " \
-            + str(self.n) + '\n'
-        s = s + "with data" + '\n'
-        s = s + '\n'.join([' '.join([str(elem) for elem in row])
-                          for row in self.data])
-        return s + '\n'
+        data = ',\r\n'.join(
+            ['    [' + ', '.join(list(map(str, row))) + ']'
+             for row in self.data])
+        return f'Matrix({self.m}, {self.n}, [\r\n{data}\r\n])'
 
     def __eq__(self, mtrx):
         """Evaluate whether two matrices are equal."""

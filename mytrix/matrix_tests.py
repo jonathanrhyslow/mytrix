@@ -30,9 +30,14 @@ class MatrixTests(unittest.TestCase):
         """Test string method."""
         raise NotImplementedError()
 
-    def testRepl(self):
-        """Test REPL method."""
-        raise NotImplementedError()
+    def testRepr(self):
+        """Test repr method."""
+        m1 = Matrix.fromRows([[1, 2, 3], [4, 5, 6]])
+        self.assertTrue(repr(m1) == "Matrix(2, 3, [\r\n" +
+                                    "    [1, 2, 3],\r\n" +
+                                    "    [4, 5, 6]\r\n" +
+                                    "])")
+        self.assertTrue(eval(repr(m1)) == m1)
 
     def testAdd(self):
         """Test addition operator."""
