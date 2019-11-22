@@ -340,6 +340,23 @@ class Matrix:
             i, j = i + 1, j + 1
         return res
 
+    @property
+    def determinant(self):
+        """Calculate the determinant of a square matrix.
+
+        This method currently implements the Laplace expansion
+        """
+        if self.m != self.n:
+            raise exc.LinearAlgebraError("cannot calculate the determinant of"
+                                         "a non-square matrix")
+        if self.m == 1:
+            return self[0, 0]
+        # TODO: can we choose a better row/column to improve efficiency
+        return sum([self[0, j] * (-1 if j % 2 else 1) *
+                    self.subset([i for i in range(1, self.m)],
+                    [k for k in range(self.n) if k != j]).determinant
+                   for j in range(self.n)])
+
     @classmethod
     def makeRandom(cls, m, n, min=0, max=1):
         """Create random matrix.

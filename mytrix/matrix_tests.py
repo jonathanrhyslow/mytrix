@@ -342,6 +342,24 @@ class MatrixTests(unittest.TestCase):
         # test idompotency of reduction to row-echelon form
         self.assertTrue(m1.row_reduce() == m1.row_reduce().row_reduce())
 
+    def testDeterminant(self):
+        """Test calculation of determinant for square matrices."""
+        # test determinant on square matrix
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        self.assertTrue(m1.determinant == -2)
+
+        # test determinant on identity matrix
+        m2 = Matrix.makeIdentity(2)
+        self.assertTrue(m2.determinant == 1)
+
+        # test determinant on non-square matrix
+        m3 = Matrix.fromRows([[1, 2, 3], [4, 5, 6]])
+        with self.assertRaises(exc.LinearAlgebraError):
+            m3.determinant()
+
+        # test determinant on a singular square matrix
+        m1 = Matrix.fromRows([[1, 2], [2, 4]])
+        self.assertTrue(m1.determinant == 0)
 
 if __name__ == "__main__":
     unittest.main()
