@@ -357,6 +357,27 @@ class Matrix:
                     [k for k in range(self.n) if k != j]).determinant
                    for j in range(self.n)])
 
+    def invert(self):
+        """Calculate the inverse of a non-singular matrix.
+
+        This method currently implements Gaussian elimination
+        """
+        if self.m != self.n:
+            raise exc.LinearAlgebraError("cannot invert a non-square matrix")
+        if self.determinant == 0:
+            raise exc.LinearAlgebraError("cannot invert a singular matrix")
+        # TODO: implement block matrices in their own method
+        block_rows = [r1 + r2 for r1, r2 in
+                      zip(self.data, Matrix.makeIdentity(self.m).data)]
+        inverse_block = Matrix.fromRows(block_rows).row_reduce()
+        return inverse_block.subset([i for i in range(self.m)],
+                                    [j + self.n for j in range(self.n)])
+
+    @property
+    def inverse(self):
+        """Calculate the inverse of an invertable matrix as a property."""
+        return self.invert()
+
     @classmethod
     def makeRandom(cls, m, n, min=0, max=1):
         """Create random matrix.

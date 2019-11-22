@@ -361,5 +361,30 @@ class MatrixTests(unittest.TestCase):
         m1 = Matrix.fromRows([[1, 2], [2, 4]])
         self.assertTrue(m1.determinant == 0)
 
+    def testInversion(self):
+        """Test inversion of non-singular matrices."""
+        # test inversion of a non-singular matrix
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        self.assertTrue(m1.invert() == Matrix.fromRows([[-4, 2], [3, -1]]) / 2)
+
+        # test inversion of the identity matrix
+        m2 = Matrix.makeIdentity(2)
+        self.assertTrue(m2.determinant == 1)
+
+        # test inversion of a non-square matrix
+        m3 = Matrix.fromRows([[1, 2, 3], [4, 5, 6]])
+        with self.assertRaises(exc.LinearAlgebraError):
+            m3.invert()
+
+        # test inversion of a singular matrix
+        m4 = Matrix.fromRows([[1, 2], [2, 4]])
+        with self.assertRaises(exc.LinearAlgebraError):
+            m4.invert()
+
+        # test inversion using the property method
+        m4 = Matrix.fromRows([[1, 2], [2, 4]])
+        self.assertTrue(m1.inverse == Matrix.fromRows([[-4, 2], [3, -1]]) / 2)
+
+
 if __name__ == "__main__":
     unittest.main()
