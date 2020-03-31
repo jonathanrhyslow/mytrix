@@ -4,6 +4,7 @@ python:
 before_install:
   - pip install -U pip
   - pip install coverage
+install: skip
 script: coverage run -m unittest discover
 after_success:
   - coverage report
