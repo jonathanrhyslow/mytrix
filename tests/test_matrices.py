@@ -10,8 +10,8 @@ import sys
 sys.path.insert(0,
                 os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from mytrix import Matrix
-import mytrix.exceptions as exc
+from mytrix import Matrix, Vector  # noqa
+import mytrix.exceptions as exc  # noqa
 
 
 class MatrixTests(unittest.TestCase):
@@ -61,11 +61,11 @@ class MatrixTests(unittest.TestCase):
 
     def testEq(self):
         """Test eq method."""
-        # test equivalence
+        # test equality
         m1 = Matrix.fromRows([[1, 2], [3, 4]])
         self.assertTrue(m1 == m1)
 
-        # test non-equivalence
+        # test non-equality
         m2 = Matrix.fromRows(([1, 2], [3, 5]))
         m3 = Matrix.fromRows(([1, 2, 2], [3, 4, 4]))
         self.assertFalse(m1 == 'spam')
@@ -85,6 +85,11 @@ class MatrixTests(unittest.TestCase):
 
         # test custom tolerance
         self.assertTrue(m1.all_near(m3, tol=10e-4))
+
+        # test non-quality
+        m4 = Matrix.fromRows(([1, 2, 2], [3, 4, 4]))
+        self.assertFalse(m1.all_near('spam'))
+        self.assertFalse(m1.all_near(m4))
 
     def testAdd(self):
         """Test addition operator."""
@@ -141,6 +146,10 @@ class MatrixTests(unittest.TestCase):
         m4 = m1 * m3
         self.assertTrue(m4 == Matrix.fromRows([[21, 24, 27], [47, 54, 61]]))
 
+        # test multiplication by vector
+        v1 = Vector.fromList([1, 2])
+        self.assertTrue(m1 * v1 == Vector.fromList([5, 11]))
+
         # test multiplication by scalar
         m5 = m1 * 2
         self.assertTrue(m5 == Matrix.fromRows([[2, 4], [6, 8]]))
@@ -149,6 +158,11 @@ class MatrixTests(unittest.TestCase):
         m6 = Matrix.fromRows([[9, 10]])
         with self.assertRaises(exc.ComformabilityError):
             m1 * m6
+
+        # test multiplication by non-conforming vector
+        v2 = Vector.fromList([1, 2, 3])
+        with self.assertRaises(exc.ComformabilityError):
+            m1 * v2
 
         # test multiplication by non-matrix/numeric object
         with self.assertRaises(TypeError):
@@ -313,6 +327,8 @@ class MatrixTests(unittest.TestCase):
             m1.subset([0, 2], 'spam')
         with self.assertRaises(ValueError):
             m1.subset([0, 2], [])
+        with self.assertRaises(TypeError):
+            m1.subset([0, .5], [1])
         with self.assertRaises(exc.OutOfBoundsError):
             m1.subset([-1, 2], [1])
         with self.assertRaises(exc.OutOfBoundsError):
@@ -380,17 +396,25 @@ class MatrixTests(unittest.TestCase):
         m1 = Matrix.fromRows([[1, 2], [3, 4]])
         self.assertTrue(m1.row_echelon() == Matrix.fromRows([[1, 2], [0, 1]]))
 
+        # test reduction on reflection matrix
+        m2 = Matrix.fromRows([[0, 1], [1, 0]])
+        self.assertTrue(m2.row_echelon() == Matrix.makeIdentity(2))
+
+        # test reduction on matrix with zero row
+        m3 = Matrix.fromRows([[0, 0], [1, 0]])
+        self.assertTrue(m3.row_echelon() == Matrix.fromRows([[1, 0], [0, 0]]))
+
         # test reduction to row-echelon form on the zero matrix
-        m2 = Matrix.makeZero(2, 2)
-        self.assertTrue(m2.row_echelon() == Matrix.makeZero(2, 2))
+        m4 = Matrix.makeZero(2, 2)
+        self.assertTrue(m4.row_echelon() == Matrix.makeZero(2, 2))
 
         # test reduction to row-echelon form on the matrix with only one row
-        m3 = Matrix.fromRows([[1, 2, 3, 4]])
-        self.assertTrue(m3.row_reduce() == Matrix.fromRows([[1, 2, 3, 4]]))
+        m5 = Matrix.fromRows([[1, 2, 3, 4]])
+        self.assertTrue(m5.row_reduce() == Matrix.fromRows([[1, 2, 3, 4]]))
 
         # test reduction to row-echelon form on the matrix with only one column
-        m4 = Matrix.fromRows([[1], [2], [3], [4]])
-        self.assertTrue(m4.row_reduce() == Matrix.fromRows([[1], [0],
+        m6 = Matrix.fromRows([[1], [2], [3], [4]])
+        self.assertTrue(m6.row_reduce() == Matrix.fromRows([[1], [0],
                                                             [0], [0]]))
 
         # test idempotency of reduction to row-echelon form
@@ -400,14 +424,14 @@ class MatrixTests(unittest.TestCase):
         self.assertTrue(m1.row_reduce() == Matrix.makeIdentity(2))
 
         # test row reduction on the zero matrix
-        self.assertTrue(m2.row_reduce() == Matrix.makeZero(2, 2))
+        self.assertTrue(m4.row_reduce() == Matrix.makeZero(2, 2))
 
         # test row reduction on the matrix with only one row
         m3 = Matrix.fromRows([[1, 2, 3, 4]])
-        self.assertTrue(m3.row_reduce() == Matrix.fromRows([[1, 2, 3, 4]]))
+        self.assertTrue(m5.row_reduce() == Matrix.fromRows([[1, 2, 3, 4]]))
 
         # test row reduction on the matrix with only one column
-        self.assertTrue(m4.row_reduce() == Matrix.fromRows([[1], [0],
+        self.assertTrue(m6.row_reduce() == Matrix.fromRows([[1], [0],
                                                             [0], [0]]))
 
         # test idempotency of reduction to row-echelon form
@@ -453,5 +477,21 @@ class MatrixTests(unittest.TestCase):
             m4.invert()
 
         # test inversion using the property method
-        m4 = Matrix.fromRows([[1, 2], [2, 4]])
         self.assertTrue(m1.inverse == Matrix.fromRows([[-4, 2], [3, -1]]) / 2)
+
+    def testHadamard(self):
+        """Test Hadamard product of matrices"""
+        # test Hadamard with matrix
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        m2 = Matrix.fromRows([[5, 6], [7, 8]])
+        m3 = Matrix.hadamard(m1, m2)
+        self.assertTrue(m3 == Matrix.fromRows([[5, 12], [21, 32]]))
+
+        # test Hadamard with non-conforming matrix
+        m4 = Matrix.fromRows([[9, 10]])
+        with self.assertRaises(exc.ComformabilityError):
+            Matrix.hadamard(m1, m4)
+
+        # test Hadamard with non-matrix/numeric object
+        with self.assertRaises(TypeError):
+            Matrix.hadamard(m1, 'spam')
