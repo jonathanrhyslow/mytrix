@@ -1,13 +1,18 @@
 """Module for general matrix class."""
 
+from math import log10
+
 from copy import deepcopy
 from random import randrange
 
-import exceptions as exc
+import mytrix.exceptions as exc
+import mytrix.vector as vec
 
 
 class Matrix:
     """A class to represent a general matrix."""
+
+    str_decimal_places = 3
 
     def __init__(self, m, n, data):
         """Initalise matrix dimensions and contents."""
@@ -17,7 +22,13 @@ class Matrix:
 
     def __str__(self):
         """Generate text representation of matrix."""
-        s = '\n'.join([' '.join([str(elem) for elem in row])
+        largest_element = max(self)
+        integer_part_length = int(log10(largest_element)) + 1
+        length = integer_part_length+self.str_decimal_places + 1
+
+        s = '\n'.join([' '.join([
+            f"{elem:{length}.{self.str_decimal_places}f}"
+            for elem in row])
                       for row in self.data])
         return s + '\n'
 
@@ -27,6 +38,12 @@ class Matrix:
             ['    [' + ', '.join(list(map(str, row))) + ']'
              for row in self.data])
         return f'Matrix({self.m}, {self.n}, [\r\n{data}\r\n])'
+
+    def __iter__(self):
+        """Iterate over elements of the matrix row-wise."""
+        for i in range(self.m):
+            for j in range(self.n):
+                yield self[i, j]
 
     def __eq__(self, mtrx):
         """Evaluate whether two matrices are equal."""
@@ -40,6 +57,23 @@ class Matrix:
                     return False
         return True
 
+    def all_near(self, mtrx, tol=10e-8):
+        """
+        Evaluate whether two matrices have all entries approximately equal.
+
+        Check whether corresponding elements of two matrices are within
+        a specified tolerance of one another.
+        """
+        if not isinstance(mtrx, Matrix):
+            return False
+        if not (self.m == mtrx.m and self.n == mtrx.n):
+            return False
+        for i in range(self.m):
+            for j in range(self.n):
+                if abs(self[i, j] - mtrx[i, j]) > tol:
+                    return False
+        return True
+
     def __copy__(self):
         """Create a shallow copy of this matrix.
 
@@ -48,7 +82,7 @@ class Matrix:
         """
         return Matrix(self.m, self.n, self.data)
 
-    def __deepcopy__(self, memodict={}):
+    def __deepcopy__(self, memodict=None):
         """Create a deep copy of this matrix.
 
         Creates a new instance of Matrix with data copied from the original
@@ -97,24 +131,33 @@ class Matrix:
                     for i in range(self.m)]
         else:
             raise TypeError(
-                    "cannot add object of type " + type(obj) + " to matrix")
+                    "cannot subtract object of type " + type(obj) +
+                    " to matrix")
         return Matrix(self.m, self.n, data)
 
     def __mul__(self, obj):
         """Multiply this matrix by a valid object and return the result.
 
         Doesn't modify the current matrix. Valid objects include other matrices
-        and numeric scalars. In the case where the other object is a matrix,
-        multiplication occurs with the current matrix on the left-hand side
+        vectors, and numeric scalars. In the case where the other object is a
+        matrix, multiplication occurs with the current matrix on the left-hand
+        side.
         """
         if isinstance(obj, Matrix):
             if self.n != obj.m:
                 raise exc.ComformabilityError(
-                        "matrices must have the same dimensions")
+                        "inner matrix dimensions must match")
             data = [[sum([self[i, k] * obj[k, j] for k in range(self.n)])
                     for j in range(obj.n)]
                     for i in range(self.m)]
             return Matrix(self.m, obj.n, data)
+        elif isinstance(obj, vec.Vector):
+            if self.n != obj.m:
+                raise exc.ComformabilityError(
+                        "number of matrix columns much match vector length")
+            data = [sum([self[i, k] * obj[k] for k in range(self.n)])
+                    for i in range(self.m)]
+            return vec.Vector(self.m, data)
         elif Matrix.is_numeric(obj):
             data = [[self[i, j] * obj
                     for j in range(self.n)]
@@ -185,7 +228,7 @@ class Matrix:
         # calls __mul__
         tmp = self * obj
         self.data = tmp.data
-        self.m, self.n = tmp.dim()
+        self.m, self.n = tmp.dim
         return self
 
     def __ifloordiv__(self, obj):
@@ -218,9 +261,10 @@ class Matrix:
         # note, if two matrices are multiplied, __mul__ takes precedence
         return self * obj
 
+    @property
     def dim(self):
         """Get matrix dimensions as tuple."""
-        return (self.m, self.n)
+        return self.m, self.n
 
     def __getitem__(self, key):
         """Get element in (i, j)th position."""
@@ -291,6 +335,27 @@ class Matrix:
         skew = (self - self.transpose()) * .5
         return sym, skew
 
+    def qr_decomposition(self):
+        """Apply the QR decomposition to this matrix.
+
+        Decompose this matrix into the product of an orthogonal and
+        upper triangular matrix, returning the result as a tuple."""
+        if self.m != self.n:
+            raise NotImplementedError('QR decomposition not yet available for' +
+                                      'non-square matrices')
+        orig_basis = [vec.Vector.fromMatrixColumn(self, j)
+                      for j in range(self.m)]
+        orthog_basis, norm_basis = [], []
+        for j in range(self.m):
+            u = orig_basis[j]
+            for k in range(j):
+                u -= orig_basis[j].project_onto(orthog_basis[k])
+            orthog_basis.append(u)
+            norm_basis.append(u.normalise())
+        Q = Matrix.fromVectors(norm_basis)
+        R = Q.transpose() * self
+        return Q, R
+
     def row_reduce(self):
         """Return the row-reduced form of this matrix."""
         res = self.row_echelon()
@@ -358,7 +423,7 @@ class Matrix:
     def invert(self):
         """Calculate the inverse of a non-singular matrix.
 
-        This method currently implements Gaussian elimination
+        This method currently implements Gaussian elimination.
         """
         if self.m != self.n:
             raise exc.LinearAlgebraError("cannot invert a non-square matrix")
@@ -373,7 +438,7 @@ class Matrix:
 
     @property
     def inverse(self):
-        """Calculate the inverse of an invertable matrix as a property."""
+        """Calculate the inverse of an invertible matrix as a property."""
         return self.invert()
 
     @classmethod
@@ -412,6 +477,15 @@ class Matrix:
         return Matrix(m, n, data)
 
     @classmethod
+    def fromCols(cls, data):
+        """Make a matrix from a list of data."""
+        m = len(data[0])
+        # check that list of data is valid
+        if any([len(col) != m for col in data[1:]]):
+            raise ValueError("inconsistent column lengths")
+        return Matrix.fromRows(data).transpose()
+
+    @classmethod
     def fromList(cls, elems, **kwargs):
         """Make matrix from list.
 
@@ -434,6 +508,17 @@ class Matrix:
         data = [elems[i * n: i * (n + 1)] for i in range(m)]
         return Matrix(m, n, data)
 
+    @classmethod
+    def fromVectors(cls, vectors):
+        """Make matrix from a list of vectors."""
+        data = [[v[i] for i in range(v.m)] for v in vectors]
+        return Matrix.fromCols(data)
+
+    @classmethod
+    def set_str_precision(cls, dp=3):
+        """Set/reset the decimal precision used for the __str__() magic."""
+        cls.str_decimal_places = dp
+
     @staticmethod
     def is_numeric(obj):
         """Check if a given object is of a numeric type.
@@ -450,3 +535,16 @@ class Matrix:
             raise TypeError("dimensions must be integral")
         if m <= 0 or n <= 0:
             raise ValueError("dimensions must be positive")
+
+    @staticmethod
+    def hadamard(A, B):
+        """Calculate the Hadamard product of two matrices"""
+        if not (isinstance(A, Matrix) and isinstance(B, Matrix)):
+            raise TypeError("can only Hadamard two matrices")
+        if A.m != B.m or A.n != B.n:
+            raise exc.ComformabilityError(
+                "matrices must have the same dimensions")
+        data = [[A[i, j] * B[i, j]
+                 for j in range(A.n)]
+                for i in range(A.m)]
+        return Matrix(A.m, B.m, data)
