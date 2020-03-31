@@ -15,6 +15,17 @@ class Vector:
         self.m = m
         self.data = data
 
+    def __eq__(self, vct):
+        """Evaluate whether two vectors are equal."""
+        if not isinstance(vct, Vector):
+            return False
+        if not (self.m == vct.m):
+            return False
+        for i in range(self.m):
+            if self[i] != vct[i]:
+                return False
+        return True
+
     def __add__(self, obj):
         """Add a valid object to this vector and return the result.
 
