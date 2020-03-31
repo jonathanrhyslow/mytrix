@@ -1,6 +1,7 @@
-[![Language: Python](https://img.shields.io/badge/Language-Python_(3.8.0%2B)-blue.svg)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Code Style: PEP 8, 257](https://img.shields.io/badge/Code%20Style-PEP%208%2C%20257-orange.svg)](https://www.python.org/dev/peps)
+[![Language: Python](https://img.shields.io/badge/language-Python_(3.8.0%2B)-blue.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code Style: PEP 8, 257](https://img.shields.io/badge/code%20style-PEP%208%2C%20257-orange.svg)](https://www.python.org/dev/peps)
+[![Build Status](https://travis-ci.com/THargreaves/mytrix.svg?branch=master)](https://travis-ci.com/THargreaves/mytrix)
 
 # Mytrix
 
