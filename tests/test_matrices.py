@@ -1,10 +1,17 @@
 """Module for testing general matrix class."""
 
+from math import sqrt
+
 from copy import copy, deepcopy
 import unittest
 
-from matrix import Matrix
-import exceptions as exc
+import os
+import sys
+sys.path.insert(0,
+                os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from mytrix import Matrix
+import mytrix.exceptions as exc
 
 
 class MatrixTests(unittest.TestCase):
@@ -28,7 +35,14 @@ class MatrixTests(unittest.TestCase):
 
     def testStr(self):
         """Test string method."""
-        raise NotImplementedError()
+        m1 = Matrix.fromRows([[1, 20], [300, 4000]])
+        self.assertTrue(str(m1) == '   1.000   20.000\n' +
+                                   ' 300.000 4000.000\n')
+
+        # test decimal precision
+        Matrix.set_str_precision(2)
+        self.assertTrue(str(m1) == '   1.00   20.00\n' +
+                                   ' 300.00 4000.00\n')
 
     def testRepr(self):
         """Test repr method."""
@@ -38,6 +52,39 @@ class MatrixTests(unittest.TestCase):
                                     "    [4, 5, 6]\r\n" +
                                     "])")
         self.assertTrue(eval(repr(m1)) == m1)
+
+    def testIter(self):
+        """Test iteration method."""
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        for i, e in enumerate(m1):
+            self.assertTrue(e == i + 1)
+
+    def testEq(self):
+        """Test eq method."""
+        # test equivalence
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        self.assertTrue(m1 == m1)
+
+        # test non-equivalence
+        m2 = Matrix.fromRows(([1, 2], [3, 5]))
+        m3 = Matrix.fromRows(([1, 2, 2], [3, 4, 4]))
+        self.assertFalse(m1 == 'spam')
+        self.assertFalse(m1 == m2)
+        self.assertFalse(m1 == m3)
+
+    def testAllNear(self):
+        """Test approximate equality."""
+        # test approximate equality
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        m2 = Matrix.fromRows([[1, 2], [3, 4 + 10e-10]])
+        self.assertTrue(m1.all_near(m2))
+
+        # test approximate in-equality
+        m3 = Matrix.fromRows([[1, 2], [3, 4 + 10e-6]])
+        self.assertFalse(m1.all_near(m3))
+
+        # test custom tolerance
+        self.assertTrue(m1.all_near(m3, tol=10e-4))
 
     def testAdd(self):
         """Test addition operator."""
@@ -185,18 +232,21 @@ class MatrixTests(unittest.TestCase):
         m2 = 2 * m1
         self.assertTrue(m2 == Matrix.fromRows([[2, 4], [6, 8]]))
 
+    def testPos(self):
+        """Test unary positive method."""
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        self.assertTrue(m1 == +m1)
+
     def testNeg(self):
         """Test matrix negation."""
         m1 = Matrix.fromRows([[1, 2], [3, 4]])
         m2 = -m1
         self.assertTrue(m2 == Matrix.fromRows([[-1, -2], [-3, -4]]))
 
-    def testEq(self):
-        """Test matrix equality."""
-        m1 = Matrix.fromRows([[1, 2], [3, 4]])
-        self.assertTrue(m1 == Matrix.fromRows([[1, 2], [3, 4]]))
-        self.assertTrue(not m1 == 'spam')
-        self.assertTrue(not m1 == Matrix.fromRows([[1, 2], [3, 4], [5, 6]]))
+    def testDim(self):
+        """Test matrix dimensions."""
+        m1 = Matrix.fromRows([[1, 2, 3], [4, 5, 6]])
+        self.assertTrue(m1.dim == (2, 3))
 
     def testGetItem(self):
         """Test getting of matrix element."""
@@ -308,6 +358,22 @@ class MatrixTests(unittest.TestCase):
         with self.assertRaises(exc.DecompositionError):
             m2.toeplitz_decomposition()
 
+    def testQRDecomposition(self):
+        """Test QR decomposition."""
+        # test decomposition on square matrix
+        m1 = Matrix.fromRows([[1, 2], [3, 4]])
+        Q, R = m1.qr_decomposition()
+        self.assertTrue(Q.all_near(Matrix.fromRows([
+            [1 / sqrt(10), 3 / sqrt(10)],
+            [3 / sqrt(10), -1 / sqrt(10)]
+        ])))
+        self.assertTrue(m1.all_near(Q * R))
+
+        # test decomposition on non-square matrix
+        m2 = Matrix.fromRows([[1, 2]])
+        with self.assertRaises(NotImplementedError):
+            m2.qr_decomposition()
+
     def testRowReduction(self):
         """Test reduction to row-reduced and row-echelon form."""
         # test reduction to row-echelon form
@@ -327,7 +393,7 @@ class MatrixTests(unittest.TestCase):
         self.assertTrue(m4.row_reduce() == Matrix.fromRows([[1], [0],
                                                             [0], [0]]))
 
-        # test idompotency of reduction to row-echelon form
+        # test idempotency of reduction to row-echelon form
         self.assertTrue(m1.row_echelon() == m1.row_echelon().row_echelon())
 
         # test row reduction
@@ -344,7 +410,7 @@ class MatrixTests(unittest.TestCase):
         self.assertTrue(m4.row_reduce() == Matrix.fromRows([[1], [0],
                                                             [0], [0]]))
 
-        # test idompotency of reduction to row-echelon form
+        # test idempotency of reduction to row-echelon form
         self.assertTrue(m1.row_reduce() == m1.row_reduce().row_reduce())
 
     def testDeterminant(self):
@@ -389,7 +455,3 @@ class MatrixTests(unittest.TestCase):
         # test inversion using the property method
         m4 = Matrix.fromRows([[1, 2], [2, 4]])
         self.assertTrue(m1.inverse == Matrix.fromRows([[-4, 2], [3, -1]]) / 2)
-
-
-if __name__ == "__main__":
-    unittest.main()
