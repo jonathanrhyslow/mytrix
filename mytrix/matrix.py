@@ -290,7 +290,7 @@ class Matrix:
     def subset(self, rows, cols):
         """Extract subset of data and columns and form into a new matrix."""
         # validation on data/cols
-        if not (isinstance(rows, list) and isinstance(rows, list)):
+        if not (isinstance(rows, list) and isinstance(cols, list)):
             raise TypeError("arguments must be lists")
         if len(rows) == 0 or len(cols) == 0:
             raise ValueError("subset cannot be empty")
