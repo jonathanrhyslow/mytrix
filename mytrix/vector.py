@@ -216,6 +216,13 @@ class Vector:
         Vector.validate_dimension(m)
         data = [1 for i in range(m)]
         return Vector(m, data)
+    
+    
+    @classmethod
+    def fromRow(cls, data):
+        """Make a vector from a list of data."""
+        m = len(data)
+        return Vector(m, data)
 
     @classmethod
     def fromList(cls, elems, **kwargs):
