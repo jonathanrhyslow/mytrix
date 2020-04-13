@@ -15,7 +15,7 @@ import mytrix.exceptions as exc  # noqa
 
 
 class MatrixTests(unittest.TestCase):
-    """Unit test functions."""
+    """Unit test matrix functions."""
 
     def testCopy(self):
         """Test shallow and deep copying."""
@@ -495,3 +495,20 @@ class MatrixTests(unittest.TestCase):
         # test Hadamard with non-matrix/numeric object
         with self.assertRaises(TypeError):
             Matrix.hadamard(m1, 'spam')
+
+class VectorTests(unittest.TestCase):
+    """Unit test vector functions."""
+    
+    def testAdd(self):
+        """Test addition operator."""
+        #test addition by vector
+        v1 = Vector.fromRow([1,2])
+        v2 = Vector.fromRow([3,4])
+        v3 = v1 + v2
+        self.assertTrue(v3 == Vector.fromRow([4,6])
+                        
+        # test addition by scalar
+        v4 = v1 + 1
+        self.assertTrue(v4 == Vector.fromRow([2, 3])
+                        
+                        
